@@ -54,7 +54,7 @@ vector<ofImage> ofApp::getBackgrounds(string id)
 
 
 //--------------------------------------------------------------
-vector<ofImage> ofApp::getFrames(string id){
+vector<ofImage> ofApp::getFrames(string _id){
 
     ofFilePath scriptPath;
     string scriptPathString = scriptPath.getAbsolutePath("scripts/ftpGetter.py", true);
@@ -72,8 +72,9 @@ vector<ofImage> ofApp::getFrames(string id){
 
         vector<string> fileparts = ofSplitString(filename, ".");
 
-        if(fileparts[0] == id)
+        if(fileparts[0] == _id && fileparts[fileparts.size()-1] == "png")
         {
+            cout << "adding" + filename << endl;
             ofImage foundImage;
             foundImage.loadImage(httpURL + filename );
             foundFrames.push_back(foundImage);
@@ -86,25 +87,38 @@ vector<ofImage> ofApp::getFrames(string id){
 //--------------------------------------------------------------
 void ofApp::update(){
 
-    if(ofGetElapsedTimeMillis() - frameTimer > 200)
-    {
-        currentFrame = (currentFrame + 1)%(frames.size()-1);
-        frameTimer = ofGetElapsedTimeMillis();
-    }
 
-    if(ofGetElapsedTimeMillis() - pollTimer > (30 * 1000))
-        frames = getFrames(id);
 
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-    for(auto bg : backgrounds)
-        bg.draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+    if(ofGetElapsedTimeMillis() - frameTimer > 200)
+    {
+        currentFrame = (currentFrame + 1)%(frames.size()-1);
+        frameTimer = ofGetElapsedTimeMillis();
+    }
 
+    if(ofGetElapsedTimeMillis() - pollTimer > (60 * 1000))
+    {
+        frames = getFrames(id);
+        pollTimer = ofGetElapsedTimeMillis();
+    }
+
+
+    //background and topology
+    for(int i = 0; i < 2; i++)
+        backgrounds[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+
+    //radar
     if(frames[currentFrame].isAllocated())
         frames[currentFrame].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+
+    //labels and scope
+    for(int i = 2; i < 4; i++)
+        backgrounds[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+
 
 }
 
