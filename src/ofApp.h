@@ -2,7 +2,7 @@
 
 #include "ofMain.h"
 
-class ofApp : public ofBaseApp{
+class ofApp : public ofBaseApp, ofThread{
 
 public:
     void setup();
@@ -21,6 +21,7 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
+    void threadedFunction();
 
     vector<string> arguments;
 
@@ -48,7 +49,8 @@ public:
 
     vector<ofImage> getBackgrounds(string id);
 
-
+    bool newFramesAvailable;
+    vector<ofImage> newFrames;
 
     int currentFrame;
     int frameTimer;
@@ -58,6 +60,7 @@ public:
     bool barBuffer;
 
     int pollTimer;
+    int pollInterval;
 
 };
 

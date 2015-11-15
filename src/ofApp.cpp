@@ -4,6 +4,8 @@
 void ofApp::setup(){
     ofDisableSmoothing();
 
+    newFramesAvailable = false;
+
     httpURL = "http://ws.cdn.bom.gov.au/radar/";
     bgURL = "http://ws.cdn.bom.gov.au/products/radar_transparencies/";
 
@@ -19,6 +21,7 @@ void ofApp::setup(){
 
     frameTimer = ofGetElapsedTimeMillis();
     pollTimer = frameTimer;
+    pollInterval = (20 * 1000);
     frameInterval = 200;
     normalizedFrameTimer = 0.0;
 
@@ -75,8 +78,9 @@ vector<ofImage> ofApp::getFrames(string _id){
 
         if(fileparts[0] == _id && fileparts[fileparts.size()-1] == "png")
         {
-            cout << "adding" + filename << endl;
+            cout << "adding " + filename << endl;
             ofImage foundImage;
+            foundImage.setUseTexture(false);
             foundImage.loadImage(httpURL + filename );
             foundFrames.push_back(foundImage);
         }
@@ -88,6 +92,16 @@ vector<ofImage> ofApp::getFrames(string _id){
 //--------------------------------------------------------------
 void ofApp::update(){
 
+
+    if(newFramesAvailable)
+    {
+        cout << "swapping frames" << endl;
+        cout << "new frame size = " << ofToString(newFrames.size()) << endl;
+        frames = newFrames;
+        newFramesAvailable = false;
+    }
+
+
     if(ofGetElapsedTimeMillis() - frameTimer > frameInterval)
     {
 
@@ -98,11 +112,13 @@ void ofApp::update(){
 
     }
 
-    if(ofGetElapsedTimeMillis() - pollTimer > (60 * 1000))
+    if(ofGetElapsedTimeMillis() - pollTimer > pollInterval)
     {
-        frames = getFrames(id);
+        startThread();
         pollTimer = ofGetElapsedTimeMillis();
     }
+
+
 
 
     //calculate normalized time for driving animations
@@ -111,6 +127,18 @@ void ofApp::update(){
 
 }
 
+//--------------------------------------------------------------
+void ofApp::threadedFunction(){
+
+    while(isThreadRunning())
+    {
+        newFrames = getFrames(id);
+        newFramesAvailable = true;
+
+        cout<<"new frames available"<<endl;
+        stopThread();
+    }
+}
 
 //--------------------------------------------------------------
 void ofApp::draw(){
@@ -126,7 +154,13 @@ void ofApp::draw(){
 
     //radar
     if(frames[currentFrame].isAllocated())
-        frames[currentFrame].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+    {
+        ofTexture frameTexture;
+        frameTexture.loadData(frames[currentFrame]);
+        //frames[currentFrame].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+        frameTexture.draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+    }
+
 
     //labels and scope
     for(int i = 3; i > 1; i--)
@@ -137,16 +171,12 @@ void ofApp::draw(){
 
     if(bLayer[4])
     {
-        ofPushStyle();
-
         float barHeight = 120;
 
-        //ofColor color1(202, 156, 57);
         ofColor color1(225, 213, 174);
         ofColor color2(182, 207, 231);
         color1.setSaturation(200);
         color2.setSaturation(200);
-
 
         if(barBuffer)
         {
@@ -155,13 +185,11 @@ void ofApp::draw(){
             color2 = tempColor;
         }
 
+        ofPushStyle();
         ofSetColor(color1);
         ofRect(0.0, ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight/10);
         ofSetColor(color2);
         ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight/10);
-
-
-
         ofPopStyle();
     }
 }
