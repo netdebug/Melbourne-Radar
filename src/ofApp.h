@@ -21,7 +21,16 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
+
+    vector<string> arguments;
+
+    //IDR021
+    //IDR022
+    //IDR023
+    //IDR024
+    string ids[4] = { "IDR021", "IDR022", "IDR023", "IDR024" };
     string id;
+    int idIndex;
 
     string httpURL;
     string bgURL;

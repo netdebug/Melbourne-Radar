@@ -3,6 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 
+
     ofDisableSmoothing();
 
     httpURL = "http://ws.cdn.bom.gov.au/radar/";
@@ -13,12 +14,12 @@ void ofApp::setup(){
     //IDR022
     //IDR023
     //IDR024
-    id = "IDR021";
-
-
+    idIndex = 3;
+    id = ids[idIndex];
     frames = getFrames(id);
-
     backgrounds = getBackgrounds(id);
+
+
     frameTimer = ofGetElapsedTimeMillis();
     pollTimer = frameTimer;
 }
@@ -109,7 +110,14 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+    if(key == ' ')
+    {
+        idIndex++;
+        idIndex %= 4;
+        id = ids[idIndex];
+        frames = getFrames(id);
+        backgrounds = getBackgrounds(id);
+    }
 }
 
 //--------------------------------------------------------------
