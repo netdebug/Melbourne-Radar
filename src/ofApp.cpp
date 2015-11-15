@@ -202,6 +202,10 @@ void ofApp::draw(){
         ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight/10);
         ofPopStyle();
     }
+
+
+    //TODO
+    //put bars top and bottom
 }
 
 
