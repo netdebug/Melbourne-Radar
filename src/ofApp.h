@@ -60,5 +60,9 @@ public:
     int pollTimer;
     int pollInterval;
 
+
+    ofColor color1;
+    ofColor color2;
+
 };
 

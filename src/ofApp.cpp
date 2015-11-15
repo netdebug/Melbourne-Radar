@@ -28,7 +28,11 @@ void ofApp::setup(){
     normalizedFrameTimer = 0.0;
 
     barBuffer = true;
+
 }
+
+
+
 
 
 
@@ -104,6 +108,7 @@ vector<ofImage> ofApp::getFrames(string _id){
 void ofApp::update(){
 
 
+    //refresh frames when thread has finished loading
     if(newFramesAvailable)
     {
         cout << "swapping frames" << endl;
@@ -115,6 +120,7 @@ void ofApp::update(){
     }
 
 
+    //display next frame in sequence
     if(ofGetElapsedTimeMillis() - frameTimer > frameInterval)
     {
         currentFrame = (currentFrame + 1)%(frames.size()-1);
@@ -125,8 +131,11 @@ void ofApp::update(){
         frameTimer = ofGetElapsedTimeMillis();
     }
 
+
+    //look for new frames
     if(ofGetElapsedTimeMillis() - pollTimer > pollInterval)
     {
+
         if(!isThreadRunning())
             startThread();
 
@@ -183,8 +192,8 @@ void ofApp::draw(){
     {
         float barHeight = 120;
 
-        ofColor color1(225, 213, 174);
-        ofColor color2(182, 207, 231);
+        color1.set(225, 213, 174);
+        color2.set(182, 207, 231);
         color1.setSaturation(200);
         color2.setSaturation(200);
 
@@ -212,6 +221,7 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
+
     if(key == ' ')
     {
         idIndex++;
@@ -219,14 +229,7 @@ void ofApp::keyPressed(int key){
         id = ids[idIndex];
         if(!isThreadRunning())
             startThread();
-
     }
-}
-
-
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
 
     if(key == '1')
         bLayer[0] = !bLayer[0];
@@ -238,6 +241,12 @@ void ofApp::keyReleased(int key){
         bLayer[3] = !bLayer[3];
     if(key == '5')
         bLayer[4] = !bLayer[4];
+}
+
+
+
+//--------------------------------------------------------------
+void ofApp::keyReleased(int key){
 }
 
 
