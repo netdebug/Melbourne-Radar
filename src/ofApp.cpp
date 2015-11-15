@@ -19,6 +19,8 @@ void ofApp::setup(){
 
     frameTimer = ofGetElapsedTimeMillis();
     pollTimer = frameTimer;
+    frameInterval = 200;
+    normalizedFrameTimer = 0.0;
 }
 
 
@@ -84,14 +86,15 @@ vector<ofImage> ofApp::getFrames(string _id){
 //--------------------------------------------------------------
 void ofApp::update(){
 
-
-
+    int totalTime = (frames.size()-1) * frameInterval;
+    normalizedFrameTimer = ((float)(ofGetElapsedTimeMillis() - frameTimer + currentFrame * frameInterval) / (float)totalTime );
 }
+
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-    if(ofGetElapsedTimeMillis() - frameTimer > 200)
+    if(ofGetElapsedTimeMillis() - frameTimer > frameInterval)
     {
         currentFrame = (currentFrame + 1)%(frames.size()-1);
         frameTimer = ofGetElapsedTimeMillis();
@@ -124,9 +127,11 @@ void ofApp::draw(){
     if(bLayer[4])
     {
         ofPushStyle();
-        ofSetColor(0, 150, 200);
+        ofSetColor(0, 150, 200, 190);
         float barHeight = 120;
-        ofRect(0.0, ofGetHeight() - barHeight*0.9, ofGetWidth() * currentFrame/(frames.size()-2), barHeight/6);
+        //ofRect(0.0, ofGetHeight() - barHeight*0.9, ofGetWidth() * currentFrame/(frames.size()-2), barHeight/6);
+        ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight/6);
+
         ofPopStyle();
     }
 }

@@ -52,6 +52,9 @@ public:
 
     int currentFrame;
     int frameTimer;
+    int frameInterval;
+    float normalizedFrameTimer;
+
 
     int pollTimer;
 
