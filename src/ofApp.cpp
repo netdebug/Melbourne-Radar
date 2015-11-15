@@ -13,12 +13,14 @@ void ofApp::setup(){
     //IDR022
     //IDR023
     //IDR024
-    string id = "IDR021";
+    id = "IDR021";
+
+
     frames = getFrames(id);
 
     backgrounds = getBackgrounds(id);
-    timer = ofGetElapsedTimeMillis();
-
+    frameTimer = ofGetElapsedTimeMillis();
+    pollTimer = frameTimer;
 }
 
 
@@ -83,11 +85,14 @@ vector<ofImage> ofApp::getFrames(string id){
 //--------------------------------------------------------------
 void ofApp::update(){
 
-    if(ofGetElapsedTimeMillis() - timer > 200)
+    if(ofGetElapsedTimeMillis() - frameTimer > 200)
     {
         currentFrame = (currentFrame + 1)%(frames.size()-1);
-        timer = ofGetElapsedTimeMillis();
+        frameTimer = ofGetElapsedTimeMillis();
     }
+
+    if(ofGetElapsedTimeMillis() - pollTimer > (30 * 1000))
+        frames = getFrames(id);
 
 }
 

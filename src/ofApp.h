@@ -21,6 +21,8 @@ public:
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
+    string id;
+
     string httpURL;
     string bgURL;
 
@@ -38,7 +40,9 @@ public:
 
 
     int currentFrame;
-    int timer;
+    int frameTimer;
+
+    int pollTimer;
 
 };
 
