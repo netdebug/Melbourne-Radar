@@ -126,7 +126,7 @@ void ofApp::draw(){
         ofPushStyle();
         ofSetColor(0, 150, 200);
         float barHeight = 120;
-        ofRect(0.0, ofGetHeight() - barHeight, ofGetWidth() * currentFrame/(frames.size()-2), barHeight/10);
+        ofRect(0.0, ofGetHeight() - barHeight*0.5, ofGetWidth() * currentFrame/(frames.size()-2), barHeight/10);
         ofPopStyle();
     }
 }
