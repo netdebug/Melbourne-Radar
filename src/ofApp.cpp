@@ -17,12 +17,14 @@ void ofApp::setup(){
     idIndex = 3;
     id = ids[idIndex];
     frames = getFrames(id);
+    frameTextures = imagesToTextures(frames);
     backgrounds = getBackgrounds(id);
+    backgroundTextures = imagesToTextures(backgrounds);
 
     frameTimer = ofGetElapsedTimeMillis();
     pollTimer = frameTimer;
-    pollInterval = (20 * 1000);
-    frameInterval = 200;
+    pollInterval = (60 * 1000);
+    frameInterval = 300;
     normalizedFrameTimer = 0.0;
 
     barBuffer = true;
@@ -40,6 +42,7 @@ vector<ofImage> ofApp::getBackgrounds(string id)
 
     vector<ofImage> bgs;
     ofImage bg;
+    bg.setUseTexture(false);
 
     bg.load(bgURL + id + ".background.png");
     bgs.push_back(bg);
@@ -60,6 +63,7 @@ vector<ofImage> ofApp::getBackgrounds(string id)
 //--------------------------------------------------------------
 vector<ofImage> ofApp::getFrames(string _id){
 
+    cout << "getting frames..." << endl;
     ofFilePath scriptPath;
     string scriptPathString = scriptPath.getAbsolutePath("scripts/ftpGetter.py", true);
 
@@ -82,7 +86,14 @@ vector<ofImage> ofApp::getFrames(string _id){
             ofImage foundImage;
             foundImage.setUseTexture(false);
             foundImage.loadImage(httpURL + filename );
-            foundFrames.push_back(foundImage);
+            if(foundImage.isAllocated())
+            {
+                foundFrames.push_back(foundImage);
+                //something like this....
+                //201511151200
+                //newFrameTimes.push_back(fileParts[2]);
+
+            }
         }
     }
 
@@ -97,29 +108,30 @@ void ofApp::update(){
     {
         cout << "swapping frames" << endl;
         cout << "new frame size = " << ofToString(newFrames.size()) << endl;
-        frames = newFrames;
+        frameTextures = imagesToTextures(newFrames);
+        backgroundTextures = imagesToTextures(newBackgroundFrames);
         newFramesAvailable = false;
+        pollTimer = ofGetElapsedTimeMillis();
     }
 
 
     if(ofGetElapsedTimeMillis() - frameTimer > frameInterval)
     {
-
         currentFrame = (currentFrame + 1)%(frames.size()-1);
+
         if(currentFrame == 0)
             barBuffer = !barBuffer;
-        frameTimer = ofGetElapsedTimeMillis();
 
+        frameTimer = ofGetElapsedTimeMillis();
     }
 
     if(ofGetElapsedTimeMillis() - pollTimer > pollInterval)
     {
-        startThread();
+        if(!isThreadRunning())
+            startThread();
+
         pollTimer = ofGetElapsedTimeMillis();
     }
-
-
-
 
     //calculate normalized time for driving animations
     int totalTime = (frames.size()-1) * frameInterval;
@@ -133,8 +145,10 @@ void ofApp::threadedFunction(){
     while(isThreadRunning())
     {
         newFrames = getFrames(id);
-        newFramesAvailable = true;
 
+        newBackgroundFrames = getBackgrounds(id);
+
+        newFramesAvailable = true;
         cout<<"new frames available"<<endl;
         stopThread();
     }
@@ -149,26 +163,22 @@ void ofApp::draw(){
     for(int i = 0; i < 2; i++)
     {
         if(bLayer[i])
-            backgrounds[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+            backgroundTextures[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
     }
 
     //radar
     if(frames[currentFrame].isAllocated())
-    {
-        ofTexture frameTexture;
-        frameTexture.loadData(frames[currentFrame]);
-        //frames[currentFrame].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
-        frameTexture.draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
-    }
-
+        frameTextures[currentFrame].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
 
     //labels and scope
     for(int i = 3; i > 1; i--)
     {
         if(bLayer[i])
-            backgrounds[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+            backgroundTextures[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
     }
 
+
+    //progress bar
     if(bLayer[4])
     {
         float barHeight = 120;
@@ -194,6 +204,8 @@ void ofApp::draw(){
     }
 }
 
+
+
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
     if(key == ' ')
@@ -201,10 +213,13 @@ void ofApp::keyPressed(int key){
         idIndex++;
         idIndex %= 4;
         id = ids[idIndex];
-        frames = getFrames(id);
-        backgrounds = getBackgrounds(id);
+        if(!isThreadRunning())
+            startThread();
+
     }
 }
+
+
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
@@ -221,48 +236,24 @@ void ofApp::keyReleased(int key){
         bLayer[4] = !bLayer[4];
 }
 
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
 
+
+vector<ofTexture> ofApp::imagesToTextures(vector<ofImage> imageVector)
+{
+    vector<ofTexture> textureVector;
+
+    for(int  i = 0; i < imageVector.size(); i++)
+    {
+        ofTexture tex;
+        tex.loadData(imageVector[i]);
+        textureVector.push_back(tex);
+    }
+
+    return textureVector;
 }
 
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
 
-}
 
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
 
-}
 
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){
-
-}
 

@@ -11,17 +11,9 @@ public:
 
     void keyPressed(int key);
     void keyReleased(int key);
-    void mouseMoved(int x, int y );
-    void mouseDragged(int x, int y, int button);
-    void mousePressed(int x, int y, int button);
-    void mouseReleased(int x, int y, int button);
-    void mouseEntered(int x, int y);
-    void mouseExited(int x, int y);
-    void windowResized(int w, int h);
-    void dragEvent(ofDragInfo dragInfo);
-    void gotMessage(ofMessage msg);
 
     void threadedFunction();
+    vector<ofTexture> imagesToTextures(vector<ofImage> imageVector);
 
     vector<string> arguments;
 
@@ -39,18 +31,24 @@ public:
     string bgURL;
 
     vector<ofImage> frames;
+    vector<ofTexture> frameTextures;
+    bool newFramesAvailable;
+    vector<ofImage> newFrames;
     vector<ofImage> getFrames(string id);
 
     vector<ofImage> backgrounds;
+    vector<ofTexture> backgroundTextures;
+    vector<ofImage> newBackgroundFrames;
+    vector<ofImage> getBackgrounds(string id);
     //http://ws.cdn.bom.gov.au/products/radar_transparencies/IDR021.background.png
     //http://ws.cdn.bom.gov.au/products/radar_transparencies/IDR021.locations.png
     //http://ws.cdn.bom.gov.au/products/radar_transparencies/IDR021.range.png
     //http://ws.cdn.bom.gov.au/products/radar_transparencies/IDR021.topography.png
 
-    vector<ofImage> getBackgrounds(string id);
 
-    bool newFramesAvailable;
-    vector<ofImage> newFrames;
+    vector<string> frameTimes;
+    vector<string> newFrameTimes;
+
 
     int currentFrame;
     int frameTimer;
