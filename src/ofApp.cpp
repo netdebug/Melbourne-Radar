@@ -21,6 +21,8 @@ void ofApp::setup(){
     pollTimer = frameTimer;
     frameInterval = 200;
     normalizedFrameTimer = 0.0;
+
+    barBuffer = true;
 }
 
 
@@ -86,18 +88,14 @@ vector<ofImage> ofApp::getFrames(string _id){
 //--------------------------------------------------------------
 void ofApp::update(){
 
-    int totalTime = (frames.size()-1) * frameInterval;
-    normalizedFrameTimer = ((float)(ofGetElapsedTimeMillis() - frameTimer + currentFrame * frameInterval) / (float)totalTime );
-}
-
-
-//--------------------------------------------------------------
-void ofApp::draw(){
-
     if(ofGetElapsedTimeMillis() - frameTimer > frameInterval)
     {
+
         currentFrame = (currentFrame + 1)%(frames.size()-1);
+        if(currentFrame == 0)
+            barBuffer = !barBuffer;
         frameTimer = ofGetElapsedTimeMillis();
+
     }
 
     if(ofGetElapsedTimeMillis() - pollTimer > (60 * 1000))
@@ -105,6 +103,19 @@ void ofApp::draw(){
         frames = getFrames(id);
         pollTimer = ofGetElapsedTimeMillis();
     }
+
+
+    //calculate normalized time for driving animations
+    int totalTime = (frames.size()-1) * frameInterval;
+    normalizedFrameTimer = ((float)(ofGetElapsedTimeMillis() - frameTimer + currentFrame * frameInterval) / (float)totalTime );
+
+}
+
+
+//--------------------------------------------------------------
+void ofApp::draw(){
+
+
 
     //background and topology
     for(int i = 0; i < 2; i++)
@@ -127,10 +138,29 @@ void ofApp::draw(){
     if(bLayer[4])
     {
         ofPushStyle();
-        ofSetColor(0, 150, 200, 190);
+
         float barHeight = 120;
-        //ofRect(0.0, ofGetHeight() - barHeight*0.9, ofGetWidth() * currentFrame/(frames.size()-2), barHeight/6);
-        ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight/6);
+
+        //ofColor color1(202, 156, 57);
+        ofColor color1(225, 213, 174);
+        ofColor color2(182, 207, 231);
+        color1.setSaturation(200);
+        color2.setSaturation(200);
+
+
+        if(barBuffer)
+        {
+            ofColor tempColor = color1;
+            color1 = color2;
+            color2 = tempColor;
+        }
+
+        ofSetColor(color1);
+        ofRect(0.0, ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight/10);
+        ofSetColor(color2);
+        ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight/10);
+
+
 
         ofPopStyle();
     }

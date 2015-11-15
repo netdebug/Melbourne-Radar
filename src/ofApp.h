@@ -32,7 +32,7 @@ public:
     string id;
     int idIndex;
 
-    bool bLayer[5] = {true, true, true, true, true};
+    bool bLayer[5] = {true, true, false, true, true};
 
     string httpURL;
     string bgURL;
@@ -55,6 +55,7 @@ public:
     int frameInterval;
     float normalizedFrameTimer;
 
+    bool barBuffer;
 
     int pollTimer;
 
