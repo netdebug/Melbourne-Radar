@@ -2,8 +2,6 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-
-
     ofDisableSmoothing();
 
     httpURL = "http://ws.cdn.bom.gov.au/radar/";
@@ -18,7 +16,6 @@ void ofApp::setup(){
     id = ids[idIndex];
     frames = getFrames(id);
     backgrounds = getBackgrounds(id);
-
 
     frameTimer = ofGetElapsedTimeMillis();
     pollTimer = frameTimer;
@@ -58,13 +55,13 @@ vector<ofImage> ofApp::getFrames(string _id){
 
     ofFilePath scriptPath;
     string scriptPathString = scriptPath.getAbsolutePath("scripts/ftpGetter.py", true);
+
     stringstream scriptOutput;
     scriptOutput << ofSystem("python " + scriptPathString);
 
     vector<string> scriptLines = ofSplitString(scriptOutput.str(), "\n");
 
     vector<ofImage> foundFrames;
-
     for(auto i : scriptLines)
     {
         vector<string> filepath = ofSplitString(i, "/");
@@ -106,20 +103,32 @@ void ofApp::draw(){
         pollTimer = ofGetElapsedTimeMillis();
     }
 
-
     //background and topology
     for(int i = 0; i < 2; i++)
-        backgrounds[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+    {
+        if(bLayer[i])
+            backgrounds[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+    }
 
     //radar
     if(frames[currentFrame].isAllocated())
         frames[currentFrame].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
 
     //labels and scope
-    for(int i = 2; i < 4; i++)
-        backgrounds[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+    for(int i = 3; i > 1; i--)
+    {
+        if(bLayer[i])
+            backgrounds[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+    }
 
-
+    if(bLayer[4])
+    {
+        ofPushStyle();
+        ofSetColor(0, 150, 200);
+        float barHeight = 120;
+        ofRect(0.0, ofGetHeight() - barHeight, ofGetWidth() * currentFrame/(frames.size()-2), barHeight/10);
+        ofPopStyle();
+    }
 }
 
 //--------------------------------------------------------------
@@ -137,6 +146,16 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
 
+    if(key == '1')
+        bLayer[0] = !bLayer[0];
+    if(key == '2')
+        bLayer[1] = !bLayer[1];
+    if(key == '3')
+        bLayer[2] = !bLayer[2];
+    if(key == '4')
+        bLayer[3] = !bLayer[3];
+    if(key == '5')
+        bLayer[4] = !bLayer[4];
 }
 
 //--------------------------------------------------------------
