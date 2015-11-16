@@ -197,8 +197,8 @@ void ofApp::draw(){
     {
         float barHeight = 120;
 
-        color1.set(225, 213, 174);
-        color2.set(182, 207, 231);
+        color1.set(225, 213, 174, 200);
+        color2.set(182, 207, 231, 200);
         color1.setSaturation(200);
         color2.setSaturation(200);
 
@@ -211,7 +211,7 @@ void ofApp::draw(){
 
         ofPushStyle();
         ofSetColor(color1);
-        ofRect(0.0, ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight);
+        ofRect(normalizedFrameTimer * ofGetWidth(), ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight);
         //ofRect(0.0, ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight/10);
         ofSetColor(color2);
         ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight);
