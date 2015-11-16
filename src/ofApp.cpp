@@ -206,9 +206,11 @@ void ofApp::draw(){
 
         ofPushStyle();
         ofSetColor(color1);
-        ofRect(0.0, ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight/10);
+        ofRect(0.0, ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight);
+        //ofRect(0.0, ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight/10);
         ofSetColor(color2);
-        ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight/10);
+        ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight);
+        //ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight/10);
         ofPopStyle();
     }
 
