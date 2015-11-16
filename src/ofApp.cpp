@@ -171,24 +171,24 @@ void ofApp::threadedFunction(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-
+    int topStretch = ofGetHeight()/30.72;
 
     //background and topology
     for(int i = 0; i < 2; i++)
     {
         if(bLayer[i])
-            backgroundTextures[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+            backgroundTextures[i].draw(0.0, 0.0 - topStretch, ofGetWidth(), ofGetHeight() + topStretch);
     }
 
     //radar
     if(frames[currentFrame].isAllocated())
-        frameTextures[currentFrame].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+        frameTextures[currentFrame].draw(0.0, 0.0 - topStretch, 0.0, ofGetWidth(), ofGetHeight() + topStretch);
 
     //labels and scope
     for(int i = 3; i > 1; i--)
     {
         if(bLayer[i])
-            backgroundTextures[i].draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+            backgroundTextures[i].draw(0.0, 0.0 - topStretch, 0.0, ofGetWidth(), ofGetHeight() + topStretch);
     }
 
 
