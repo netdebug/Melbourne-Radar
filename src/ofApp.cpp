@@ -23,7 +23,7 @@ void ofApp::setup(){
 
     frameTimer = ofGetElapsedTimeMillis();
     pollTimer = frameTimer;
-    pollInterval = (60 * 1000);
+    pollInterval = (40 * 1000);
     frameInterval = 300;
     normalizedFrameTimer = 0.0;
 
@@ -137,7 +137,12 @@ void ofApp::update(){
     {
 
         if(!isThreadRunning())
+        {
+            idIndex++;
+            idIndex %= 4;
+            id = ids[idIndex];
             startThread();
+        }
 
         pollTimer = ofGetElapsedTimeMillis();
     }
@@ -226,11 +231,13 @@ void ofApp::keyPressed(int key){
 
     if(key == ' ')
     {
-        idIndex++;
-        idIndex %= 4;
-        id = ids[idIndex];
         if(!isThreadRunning())
+        {
+            idIndex++;
+            idIndex %= 4;
+            id = ids[idIndex];
             startThread();
+        }
     }
 
     if(key == '1')

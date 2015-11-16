@@ -25,7 +25,7 @@ public:
     string id;
     int idIndex;
 
-    bool bLayer[5] = {true, true, false, true, true};
+    bool bLayer[5] = {true, true, true, true, true};
 
     string httpURL;
     string bgURL;
