@@ -2,7 +2,9 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    ofDisableSmoothing();
+//    ofDisableSmoothing();
+//    ofDisableAntiAliasing();
+//    ofEnableAlphaBlending();
 
     newFramesAvailable = false;
 
@@ -22,7 +24,19 @@ void ofApp::setup(){
     pollInterval = (10 * 1000);
     frameInterval = 300;
     normalizedFrameTimer = 0.0;
-
+    
+    pixBuff.allocate(16,16,GL_RGBA);
+    pixBuff.getTexture().setTextureMinMagFilter(GL_NEAREST, GL_NEAREST);
+    pixBuff.begin();
+    ofClear(0.0,0.0);
+    pixBuff.end();
+    
+    float radius = 10;
+    float shape = 10.0; //low circle, high square
+    int passes = 2;
+    float downsample = 1.0;
+    
+    blur.setup(ofGetWidth(), ofGetHeight(), radius, shape, passes, downsample);
 }
 
 
@@ -82,7 +96,6 @@ void ofApp::getIDs(){
             ids.push_back(fileparts[0]);
         }
     }
-
 }
 
 
@@ -122,7 +135,6 @@ vector<ofImage> ofApp::getFrames(string _id){
             }
         }
     }
-
     return foundFrames;
 }
 
@@ -145,7 +157,6 @@ void ofApp::update(){
                 incrementID();
                 startThread();
             }
-            
         }
         newFramesAvailable = false;
         pollTimer = ofGetElapsedTimeMillis();
@@ -203,22 +214,63 @@ void ofApp::draw(){
     float w = ofGetWidth() + 2.0 * ofGetWidth() * zoom;
     float h = ofGetHeight() + 2.0 * ofGetHeight() * zoom;
     
-    ofClear(0);
+    
+    ofClear(0.0,0.0);
+    
+    if(pixelate){
+        pixBuff.begin();
+        x = 0.0 - pixBuff.getWidth() * zoom;
+        y = 0.0 - pixBuff.getHeight() * zoom;
+        w = pixBuff.getWidth() + 2.0 * pixBuff.getWidth() * zoom;
+        h = pixBuff.getHeight() + 2.0 * pixBuff.getHeight() * zoom;
+        
+        ofClear(0, 0, 0, 0);
+        
+        if(doBlur){
+            blur.begin();
+            ofClear(0, 0, 0, 0);
+        }
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        
+        if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
+            frameTextures[currentFrame].draw(x,y,w,h);
+        
+        if(doBlur) {
+            blur.end();
+            blur.draw();
+        }
+        pixBuff.end();
+        ofEnableAlphaBlending();
+    }
+    
     
     //background and topology
     for(int i = 0; i < 2; i++)
-        if(bLayer[i])
+        if(bLayer[i] && !pixelate)
             backgroundTextures[i].draw(x,y,w,h);
-
+    
     //radar
-    if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
-        frameTextures[currentFrame].draw(x,y,w,h);
-
+    if(!pixelate){
+        
+            if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
+                frameTextures[currentFrame].draw(x,y,w,h);
+    }
+    else{
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        pixBuff.draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
+        ofEnableAlphaBlending();
+    }
+    
+    
     //labels and scope
     for(int i = 3; i > 1; i--)
         if(bLayer[i])
             backgroundTextures[i].draw(x,y,w,h);
+    
+
 }
+
+
 
 
 //--------------------------------------------------------------
@@ -239,6 +291,16 @@ void ofApp::keyPressed(int key){
             incrementID();
             startThread();
         }
+    
+    if(key == 'p'){
+        pixelate = !pixelate;
+        cout << "pixelate = " << pixelate << endl;
+    }
+    
+    if(key == 'b'){
+        doBlur = !doBlur;
+        cout << "do blur = " << doBlur << endl;
+    }
 
     if(key == '1')
         bLayer[0] = !bLayer[0];
