@@ -14,7 +14,9 @@ void ofApp::setup(){
     //IDR022
     //IDR023
     //IDR024
-    idIndex = 3;
+    // idIndex = 3;
+    // id = ids[idIndex];
+    getIDs();
     id = ids[idIndex];
     frames = getFrames(id);
     frameTextures = imagesToTextures(frames);
@@ -23,17 +25,13 @@ void ofApp::setup(){
 
     frameTimer = ofGetElapsedTimeMillis();
     pollTimer = frameTimer;
-    pollInterval = (40 * 1000);
+    pollInterval = (120 * 1000);
     frameInterval = 300;
     normalizedFrameTimer = 0.0;
 
     barBuffer = true;
 
 }
-
-
-
-
 
 
 //--------------------------------------------------------------
@@ -61,6 +59,38 @@ vector<ofImage> ofApp::getBackgrounds(string id)
     bgs.push_back(bg);
 
     return bgs;
+}
+
+
+
+
+//--------------------------------------------------------------
+void ofApp::getIDs(){
+
+    cout << "getting ids..." << endl;
+    ofFilePath scriptPath;
+    string scriptPathString = scriptPath.getAbsolutePath("scripts/ftpGetter.py", true);
+
+    stringstream scriptOutput;
+    scriptOutput << ofSystem("python " + scriptPathString);
+
+    vector<string> scriptLines = ofSplitString(scriptOutput.str(), "\n");
+
+    vector<ofImage> foundFrames;
+    for(auto i : scriptLines)
+    {
+        vector<string> filepath = ofSplitString(i, "/");
+        string filename = filepath[filepath.size()-1];
+
+        vector<string> fileparts = ofSplitString(filename, ".");
+
+        if(fileparts[fileparts.size()-1] == "gif")
+        {
+            cout << "id found: " + fileparts[0] << endl;
+            ids.push_back(fileparts[0]);
+        }
+    }
+
 }
 
 
@@ -138,9 +168,9 @@ void ofApp::update(){
 
         if(!isThreadRunning())
         {
-            idIndex++;
-            idIndex %= 4;
-            id = ids[idIndex];
+            // idIndex++;
+            // idIndex %= 3;
+            // id = ids[idIndex];
             startThread();
         }
 
@@ -170,15 +200,13 @@ void ofApp::threadedFunction(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-
+	ofClear(0);
     int topStretch = ofGetHeight()/30.72;
 
     //background and topology
     for(int i = 0; i < 2; i++)
-    {
         if(bLayer[i])
             backgroundTextures[i].draw(0.0, 0.0 - topStretch, ofGetWidth(), ofGetHeight() + topStretch);
-    }
 
     //radar
     if(frames[currentFrame].isAllocated())
@@ -186,10 +214,8 @@ void ofApp::draw(){
 
     //labels and scope
     for(int i = 3; i > 1; i--)
-    {
         if(bLayer[i])
             backgroundTextures[i].draw(0.0, 0.0 - topStretch, 0.0, ofGetWidth(), ofGetHeight() + topStretch);
-    }
 
 
     //progress bar
@@ -234,7 +260,7 @@ void ofApp::keyPressed(int key){
         if(!isThreadRunning())
         {
             idIndex++;
-            idIndex %= 4;
+            idIndex %= ids.size();
             id = ids[idIndex];
             startThread();
         }
@@ -259,7 +285,7 @@ void ofApp::keyReleased(int key){
 }
 
 
-
+//--------------------------------------------------------------
 vector<ofTexture> ofApp::imagesToTextures(vector<ofImage> imageVector)
 {
     vector<ofTexture> textureVector;

@@ -14,18 +14,12 @@ public:
 
     void threadedFunction();
     vector<ofTexture> imagesToTextures(vector<ofImage> imageVector);
-
     vector<string> arguments;
+    vector<string>  ids;
+    string id = "IDR022";
+    int idIndex = 0;
 
-    //IDR021
-    //IDR022
-    //IDR023
-    //IDR024
-    string ids[4] = { "IDR021", "IDR022", "IDR023", "IDR024" };
-    string id;
-    int idIndex;
-
-    bool bLayer[5] = {true, true, true, true, true};
+    bool bLayer[5] = {true, true, true, true, false};
 
     string httpURL;
     string bgURL;
@@ -35,6 +29,7 @@ public:
     bool newFramesAvailable;
     vector<ofImage> newFrames;
     vector<ofImage> getFrames(string id);
+    void getIDs();
 
     vector<ofImage> backgrounds;
     vector<ofTexture> backgroundTextures;
