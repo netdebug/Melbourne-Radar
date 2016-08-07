@@ -10,7 +10,6 @@ public:
     void draw();
 
     void keyPressed(int key);
-    void keyReleased(int key);
 
     void threadedFunction();
     vector<ofTexture> imagesToTextures(vector<ofImage> imageVector);
@@ -19,7 +18,7 @@ public:
     string id = "IDR022";
     int idIndex = 0;
 
-    bool bLayer[5] = {true, true, true, true, false};
+    bool bLayer[5] = {true, true, false, false, false};
 
     string httpURL;
     string bgURL;
@@ -30,6 +29,7 @@ public:
     vector<ofImage> newFrames;
     vector<ofImage> getFrames(string id);
     void getIDs();
+    void incrementID();
 
     vector<ofImage> backgrounds;
     vector<ofTexture> backgroundTextures;
@@ -50,14 +50,10 @@ public:
     int frameInterval;
     float normalizedFrameTimer;
 
-    bool barBuffer;
 
     int pollTimer;
     int pollInterval;
-
-
-    ofColor color1;
-    ofColor color2;
+    
 
 };
 

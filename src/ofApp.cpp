@@ -10,12 +10,6 @@ void ofApp::setup(){
     bgURL = "http://ws.cdn.bom.gov.au/products/radar_transparencies/";
 
     currentFrame = 0;
-    //IDR021
-    //IDR022
-    //IDR023
-    //IDR024
-    // idIndex = 3;
-    // id = ids[idIndex];
     getIDs();
     id = ids[idIndex];
     frames = getFrames(id);
@@ -25,11 +19,9 @@ void ofApp::setup(){
 
     frameTimer = ofGetElapsedTimeMillis();
     pollTimer = frameTimer;
-    pollInterval = (120 * 1000);
+    pollInterval = (10 * 1000);
     frameInterval = 300;
     normalizedFrameTimer = 0.0;
-
-    barBuffer = true;
 
 }
 
@@ -119,7 +111,7 @@ vector<ofImage> ofApp::getFrames(string _id){
             cout << "adding " + filename << endl;
             ofImage foundImage;
             foundImage.setUseTexture(false);
-            foundImage.loadImage(httpURL + filename );
+            foundImage.load(httpURL + filename );
             if(foundImage.isAllocated())
             {
                 foundFrames.push_back(foundImage);
@@ -136,27 +128,36 @@ vector<ofImage> ofApp::getFrames(string _id){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
-
     //refresh frames when thread has finished loading
+
     if(newFramesAvailable)
     {
-        cout << "swapping frames" << endl;
-        cout << "new frame size = " << ofToString(newFrames.size()) << endl;
-        frameTextures = imagesToTextures(newFrames);
-        backgroundTextures = imagesToTextures(newBackgroundFrames);
+        cout << "#new frames found = " << ofToString(newFrames.size()) << endl;
+        //if images failed to load don't swap buffers
+        if(newFrames.size() > 0)
+        {
+            frameTextures = imagesToTextures(newFrames);
+            backgroundTextures = imagesToTextures(newBackgroundFrames);
+        }else{
+            cout << "frame buffer not swapped" << endl;
+            if(!isThreadRunning())
+            {
+                incrementID();
+                startThread();
+            }
+            
+        }
         newFramesAvailable = false;
         pollTimer = ofGetElapsedTimeMillis();
+        cout << endl;
     }
-
 
     //display next frame in sequence
     if(ofGetElapsedTimeMillis() - frameTimer > frameInterval)
     {
-        currentFrame = (currentFrame + 1)%(frames.size()-1);
-
-        if(currentFrame == 0)
-            barBuffer = !barBuffer;
+        currentFrame = (currentFrame + 1);
+        if(currentFrame > (frameTextures.size()-1))
+            currentFrame = 0;
 
         frameTimer = ofGetElapsedTimeMillis();
     }
@@ -168,9 +169,7 @@ void ofApp::update(){
 
         if(!isThreadRunning())
         {
-            // idIndex++;
-            // idIndex %= 3;
-            // id = ids[idIndex];
+            incrementID();
             startThread();
         }
 
@@ -189,9 +188,7 @@ void ofApp::threadedFunction(){
     while(isThreadRunning())
     {
         newFrames = getFrames(id);
-
         newBackgroundFrames = getBackgrounds(id);
-
         newFramesAvailable = true;
         cout<<"new frames available"<<endl;
         stopThread();
@@ -200,71 +197,48 @@ void ofApp::threadedFunction(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	ofClear(0);
-    int topStretch = ofGetHeight()/30.72;
-
+	float zoom = 0.04;
+    float x = 0.0 - ofGetWidth() * zoom;
+    float y = 0.0 - ofGetHeight() * zoom;
+    float w = ofGetWidth() + 2.0 * ofGetWidth() * zoom;
+    float h = ofGetHeight() + 2.0 * ofGetHeight() * zoom;
+    
+    ofClear(0);
+    
     //background and topology
     for(int i = 0; i < 2; i++)
         if(bLayer[i])
-            backgroundTextures[i].draw(0.0, 0.0 - topStretch, ofGetWidth(), ofGetHeight() + topStretch);
+            backgroundTextures[i].draw(x,y,w,h);
 
     //radar
-    if(frames[currentFrame].isAllocated())
-        frameTextures[currentFrame].draw(0.0, 0.0 - topStretch, 0.0, ofGetWidth(), ofGetHeight() + topStretch);
+    if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
+        frameTextures[currentFrame].draw(x,y,w,h);
 
     //labels and scope
     for(int i = 3; i > 1; i--)
         if(bLayer[i])
-            backgroundTextures[i].draw(0.0, 0.0 - topStretch, 0.0, ofGetWidth(), ofGetHeight() + topStretch);
-
-
-    //progress bar
-    if(bLayer[4])
-    {
-        float barHeight = 120;
-
-        color1.set(225, 213, 174, 200);
-        color2.set(182, 207, 231, 200);
-        color1.setSaturation(200);
-        color2.setSaturation(200);
-
-        if(barBuffer)
-        {
-            ofColor tempColor = color1;
-            color1 = color2;
-            color2 = tempColor;
-        }
-
-        ofPushStyle();
-        ofSetColor(color1);
-        ofRect(normalizedFrameTimer * ofGetWidth(), ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight);
-        //ofRect(0.0, ofGetHeight() - barHeight*0.9,ofGetWidth(), barHeight/10);
-        ofSetColor(color2);
-        ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight);
-        //ofRect(0.0, ofGetHeight() - barHeight*0.9, normalizedFrameTimer * ofGetWidth(), barHeight/10);
-        ofPopStyle();
-    }
-
-
-    //TODO
-    //put bars top and bottom
+            backgroundTextures[i].draw(x,y,w,h);
 }
 
+
+//--------------------------------------------------------------
+void ofApp::incrementID(){
+    idIndex++;
+    idIndex %= ids.size();
+    id = ids[idIndex];
+    cout << "new id = " << id << endl;
+}
 
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 
     if(key == ' ')
-    {
         if(!isThreadRunning())
         {
-            idIndex++;
-            idIndex %= ids.size();
-            id = ids[idIndex];
+            incrementID();
             startThread();
         }
-    }
 
     if(key == '1')
         bLayer[0] = !bLayer[0];
@@ -278,11 +252,6 @@ void ofApp::keyPressed(int key){
         bLayer[4] = !bLayer[4];
 }
 
-
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-}
 
 
 //--------------------------------------------------------------
