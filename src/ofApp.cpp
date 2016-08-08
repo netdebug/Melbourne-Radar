@@ -5,7 +5,9 @@ void ofApp::setup(){
 //    ofDisableSmoothing();
 //    ofDisableAntiAliasing();
 //    ofEnableAlphaBlending();
-
+    oscSender.setup("127.0.0.1", 5050);
+    
+    ofSetLogLevel(OF_LOG_VERBOSE);
     newFramesAvailable = false;
 
     httpURL = "http://ws.cdn.bom.gov.au/radar/";
@@ -16,6 +18,7 @@ void ofApp::setup(){
     id = ids[idIndex];
     frames = getFrames(id);
     frameTextures = imagesToTextures(frames);
+    oscFrames = makeOscFrames(frameTextures);
     backgrounds = getBackgrounds(id);
     backgroundTextures = imagesToTextures(backgrounds);
 
@@ -25,12 +28,13 @@ void ofApp::setup(){
     frameInterval = 300;
     normalizedFrameTimer = 0.0;
 
-    // pixBuff.allocate(16,16,GL_RGBA);    
-    pixBuff.allocate(8,8,GL_RGBA);
+    pixBuff.allocate(GRID_X,GRID_Y,GL_RGBA);
     pixBuff.getTexture().setTextureMinMagFilter(GL_NEAREST,GL_NEAREST);
     pixBuff.begin();
     ofClear(0,0);
     pixBuff.end();
+    
+    
 }
 
 
@@ -108,9 +112,10 @@ vector<ofImage> ofApp::getFrames(string _id){
     vector<ofImage> foundFrames;
     for(auto i : scriptLines)
     {
+        
+        
         vector<string> filepath = ofSplitString(i, "/");
         string filename = filepath[filepath.size()-1];
-
         vector<string> fileparts = ofSplitString(filename, ".");
 
         if(fileparts[0] == _id && fileparts[fileparts.size()-1] == "png")
@@ -135,14 +140,17 @@ vector<ofImage> ofApp::getFrames(string _id){
 //--------------------------------------------------------------
 void ofApp::update(){
     //refresh frames when thread has finished loading
-
     if(newFramesAvailable)
     {
         cout << "#new frames found = " << ofToString(newFrames.size()) << endl;
         //if images failed to load don't swap buffers
         if(newFrames.size() > 0)
         {
+            frameTextures.clear();
             frameTextures = imagesToTextures(newFrames);
+            oscFrames.clear();
+            oscFrames = makeOscFrames(frameTextures);
+            backgroundTextures.clear();
             backgroundTextures = imagesToTextures(newBackgroundFrames);
         }else{
             cout << "frame buffer not swapped" << endl;
@@ -163,6 +171,10 @@ void ofApp::update(){
         currentFrame = (currentFrame + 1);
         if(currentFrame > (frameTextures.size()-1))
             currentFrame = 0;
+        
+        //SEND OSC
+        if(currentFrame < oscFrames.size())
+            oscSender.sendBundle(oscFrames[currentFrame]);
 
         frameTimer = ofGetElapsedTimeMillis();
     }
@@ -195,7 +207,9 @@ void ofApp::threadedFunction(){
 
     while(isThreadRunning())
     {
+        newFrames.clear();
         newFrames = getFrames(id);
+        newBackgroundFrames.clear();
         newBackgroundFrames = getBackgrounds(id);
         newFramesAvailable = true;
         cout<<"new frames available"<<endl;
@@ -211,48 +225,48 @@ void ofApp::draw(){
 	float h = ofGetHeight() + 2.0 * ofGetHeight() * zoom;    
     
     ofClear(0,0);
-    ofBackground(255,0,0);
+    ofBackground(0);
+
     
-    //background and topology
+    //BG and TOPOLOGY
+    //layers 0, 1
     for(int i = 0; i < 2; i++)
         if(bLayer[i])
             backgroundTextures[i].draw(x,y,w,h);
 
-    //radar
-    if(!pixelate)
-        if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
-                frameTextures[currentFrame].draw(x,y,w,h);
+    //RADAR
+    //layer 2
+    if(bLayer[2])
+    if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
+            frameTextures[currentFrame].draw(x,y,w,h);
         
     //PIXELS
-    if(pixelate){
-	    //make pixels
-	    pixBuff.begin();
-		ofClear(0,0);	    
-	    //trails
-	    // ofSetColor(0, 100);
-	    // ofDrawRectangle(0.0,0.0,pixBuff.getWidth(),pixBuff.getHeight());
-	    // ofSetColor(255);
-	    ofSetColor(255, 100);
-	    pixBuff.draw(0.0,0.0,pixBuff.getWidth(),pixBuff.getHeight());
-	    ofSetColor(255);
-
+    //layer 3
+    if(bLayer[3]){
 	    float px = 0.0 - pixBuff.getWidth() * zoom;
 	    float py = 0.0 - pixBuff.getHeight() * zoom;
 	    float pw = pixBuff.getWidth() + 2.0 * pixBuff.getWidth() * zoom;
 	    float ph = pixBuff.getHeight() + 2.0 * pixBuff.getHeight() * zoom;
-	    
+        
+        pixBuff.begin();
+        ofClear(0.0,0.0);
+        
 	    if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
 	        frameTextures[currentFrame].draw(px,py,pw,ph);
 	    
-	    pixBuff.end();
-
+        pixBuff.end();
         pixBuff.draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
     }
 
-    //labels and scope
-    for(int i = 3; i > 1; i--)
-        if(bLayer[i])
-            backgroundTextures[i].draw(x,y,w,h);
+    //LABELS
+    //layer 4
+    if(bLayer[4])
+        backgroundTextures[2].draw(x,y,w,h);
+    
+    //SCOPE
+    //layer 5
+    if(bLayer[5])
+        backgroundTextures[3].draw(x,y,w,h);
 }
 
 
@@ -276,11 +290,6 @@ void ofApp::keyPressed(int key){
             incrementID();
             startThread();
         }
-    
-    if(key == 'p'){
-        pixelate = !pixelate;
-        cout << "pixelate = " << pixelate << endl;
-    }
 
     if(key == '1')
         bLayer[0] = !bLayer[0];
@@ -292,6 +301,8 @@ void ofApp::keyPressed(int key){
         bLayer[3] = !bLayer[3];
     if(key == '5')
         bLayer[4] = !bLayer[4];
+    if(key == '6')
+        bLayer[5] = !bLayer[5];
 }
 
 
@@ -312,6 +323,37 @@ vector<ofTexture> ofApp::imagesToTextures(vector<ofImage> imageVector)
 }
 
 
+
+vector<ofxOscBundle> ofApp::makeOscFrames(vector<ofTexture>textures){
+    vector<ofxOscBundle> bundles;
+    
+    for(auto t : textures){
+        ofPixels pixels;
+        t.readToPixels(pixels);
+        pixels.resize(GRID_X, GRID_Y);
+        
+        ofxOscBundle bundle;
+        
+        for(int p = 0; p < GRID_X * GRID_Y; p++){
+            ofColor c = pixels.getColor(p);
+            int r = c.r;
+            int g = c.g;
+            int b = c.b;
+            
+            if(r+g+b>0)
+            {
+                ofxOscMessage m;
+                m.setAddress("/grid/p/" + ofToString(p));
+                int ch = c.getHex();
+                m.addIntArg(ch);
+                bundle.addMessage(m);
+
+            }
+        }
+        bundles.push_back(bundle);
+    }
+    return bundles;
+}
 
 
 

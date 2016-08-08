@@ -1,7 +1,9 @@
 #pragma once
 
 #include "ofMain.h"
-// #include "ofxBlur.h"
+#include "ofxOSC.h"
+#define GRID_X 16
+#define GRID_Y 16
 
 class ofApp : public ofBaseApp, ofThread{
 
@@ -19,7 +21,7 @@ public:
     string id = "IDR022";
     int idIndex = 0;
     
-    bool bLayer[5] = {true, true, false, false, false};
+    bool bLayer[6] = {true, true, true, true, false, false};
 
     string httpURL;
     string bgURL;
@@ -30,10 +32,7 @@ public:
     vector<ofImage> newFrames;
     vector<ofImage> getFrames(string id);
     ofFbo pixBuff;
-    bool pixelate = false;
-    float zoom =  0.5; //0.04;
-    // ofxBlur blur;
-    // bool doBlur = false;
+    float zoom =  0.04;
     
     void getIDs();
     void incrementID();
@@ -49,14 +48,17 @@ public:
 
     vector<string> frameTimes;
     vector<string> newFrameTimes;
-
     int currentFrame;
     int frameTimer;
     int frameInterval;
     float normalizedFrameTimer;
-
     int pollTimer;
     int pollInterval;
+    
+    
+    ofxOscSender oscSender;
+    vector<ofxOscBundle> oscFrames;
+    vector<ofxOscBundle> makeOscFrames(vector<ofTexture> textures);
     
 
 };
