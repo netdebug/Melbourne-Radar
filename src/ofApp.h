@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxBlur.h"
+// #include "ofxBlur.h"
 
 class ofApp : public ofBaseApp, ofThread{
 
@@ -31,8 +31,9 @@ public:
     vector<ofImage> getFrames(string id);
     ofFbo pixBuff;
     bool pixelate = false;
-    ofxBlur blur;
-    bool doBlur = false;
+    float zoom =  0.5; //0.04;
+    // ofxBlur blur;
+    // bool doBlur = false;
     
     void getIDs();
     void incrementID();

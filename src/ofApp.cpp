@@ -24,19 +24,13 @@ void ofApp::setup(){
     pollInterval = (10 * 1000);
     frameInterval = 300;
     normalizedFrameTimer = 0.0;
-    
-    pixBuff.allocate(16,16,GL_RGBA);
-    pixBuff.getTexture().setTextureMinMagFilter(GL_NEAREST, GL_NEAREST);
+
+    // pixBuff.allocate(16,16,GL_RGBA);    
+    pixBuff.allocate(8,8,GL_RGBA);
+    pixBuff.getTexture().setTextureMinMagFilter(GL_NEAREST,GL_NEAREST);
     pixBuff.begin();
-    ofClear(0.0,0.0);
+    ofClear(0,0);
     pixBuff.end();
-    
-    float radius = 10;
-    float shape = 10.0; //low circle, high square
-    int passes = 2;
-    float downsample = 1.0;
-    
-    blur.setup(ofGetWidth(), ofGetHeight(), radius, shape, passes, downsample);
 }
 
 
@@ -191,6 +185,9 @@ void ofApp::update(){
     int totalTime = (frames.size()-1) * frameInterval;
     normalizedFrameTimer = ((float)(ofGetElapsedTimeMillis() - frameTimer + currentFrame * frameInterval) / (float)totalTime );
 
+
+
+
 }
 
 //--------------------------------------------------------------
@@ -208,66 +205,54 @@ void ofApp::threadedFunction(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	float zoom = 0.04;
-    float x = 0.0 - ofGetWidth() * zoom;
-    float y = 0.0 - ofGetHeight() * zoom;
-    float w = ofGetWidth() + 2.0 * ofGetWidth() * zoom;
-    float h = ofGetHeight() + 2.0 * ofGetHeight() * zoom;
+	float x = 0.0 - ofGetWidth() * zoom;
+	float y = 0.0 - ofGetHeight() * zoom;
+	float w = ofGetWidth() + 2.0 * ofGetWidth() * zoom;
+	float h = ofGetHeight() + 2.0 * ofGetHeight() * zoom;    
     
-    
-    ofClear(0.0,0.0);
-    
-    if(pixelate){
-        pixBuff.begin();
-        x = 0.0 - pixBuff.getWidth() * zoom;
-        y = 0.0 - pixBuff.getHeight() * zoom;
-        w = pixBuff.getWidth() + 2.0 * pixBuff.getWidth() * zoom;
-        h = pixBuff.getHeight() + 2.0 * pixBuff.getHeight() * zoom;
-        
-        ofClear(0, 0, 0, 0);
-        
-        if(doBlur){
-            blur.begin();
-            ofClear(0, 0, 0, 0);
-        }
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        
-        if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
-            frameTextures[currentFrame].draw(x,y,w,h);
-        
-        if(doBlur) {
-            blur.end();
-            blur.draw();
-        }
-        pixBuff.end();
-        ofEnableAlphaBlending();
-    }
-    
+    ofClear(0,0);
+    ofBackground(255,0,0);
     
     //background and topology
     for(int i = 0; i < 2; i++)
-        if(bLayer[i] && !pixelate)
+        if(bLayer[i])
             backgroundTextures[i].draw(x,y,w,h);
-    
+
     //radar
-    if(!pixelate){
-        
-            if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
+    if(!pixelate)
+        if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
                 frameTextures[currentFrame].draw(x,y,w,h);
-    }
-    else{
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        
+    //PIXELS
+    if(pixelate){
+	    //make pixels
+	    pixBuff.begin();
+		ofClear(0,0);	    
+	    //trails
+	    // ofSetColor(0, 100);
+	    // ofDrawRectangle(0.0,0.0,pixBuff.getWidth(),pixBuff.getHeight());
+	    // ofSetColor(255);
+	    ofSetColor(255, 100);
+	    pixBuff.draw(0.0,0.0,pixBuff.getWidth(),pixBuff.getHeight());
+	    ofSetColor(255);
+
+	    float px = 0.0 - pixBuff.getWidth() * zoom;
+	    float py = 0.0 - pixBuff.getHeight() * zoom;
+	    float pw = pixBuff.getWidth() + 2.0 * pixBuff.getWidth() * zoom;
+	    float ph = pixBuff.getHeight() + 2.0 * pixBuff.getHeight() * zoom;
+	    
+	    if(frames[currentFrame].isAllocated() && currentFrame < frameTextures.size())
+	        frameTextures[currentFrame].draw(px,py,pw,ph);
+	    
+	    pixBuff.end();
+
         pixBuff.draw(0.0, 0.0, ofGetWidth(), ofGetHeight());
-        ofEnableAlphaBlending();
     }
-    
-    
+
     //labels and scope
     for(int i = 3; i > 1; i--)
         if(bLayer[i])
             backgroundTextures[i].draw(x,y,w,h);
-    
-
 }
 
 
@@ -295,11 +280,6 @@ void ofApp::keyPressed(int key){
     if(key == 'p'){
         pixelate = !pixelate;
         cout << "pixelate = " << pixelate << endl;
-    }
-    
-    if(key == 'b'){
-        doBlur = !doBlur;
-        cout << "do blur = " << doBlur << endl;
     }
 
     if(key == '1')
