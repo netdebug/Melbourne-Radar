@@ -11,4 +11,6 @@ public:
 private:
     vector<Cell> cells;
     ofTexture videoTexture;
+    void createVideoTexture();
+    float threshold;
 };

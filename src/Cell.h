@@ -5,4 +5,5 @@ public:
     int y;
     int c;
     int lastc;
+    float activeness;
 };
